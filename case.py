@@ -59,3 +59,4 @@ Case = {}
 ## Inequality Indicators
 # Top 10% income share
 # Top 1% income share
+# Gini index (World Bank estimate)

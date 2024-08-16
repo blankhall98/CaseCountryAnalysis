@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
+from scipy.stats import pearsonr, linregress
 
 from scripts.country import Country
 
@@ -308,3 +309,91 @@ class Analyst:
         # Display the plot
         plt.tight_layout()
         plt.show()
+
+    def indicator_relationship_stats(self, country, indicator_x, indicator_y, plot=True):
+        """
+        Return a table with important statistical values for the relationship between two indicators,
+        and optionally plot a regression graph.
+        
+        Parameters:
+        - country: A country instance (with the .data DataFrame containing indicators).
+        - indicator_x: The indicator to use as the independent variable (x-axis).
+        - indicator_y: The indicator to use as the dependent variable (y-axis).
+        - plot: Boolean indicating whether to produce a regression plot.
+        
+        Returns:
+        - DataFrame containing important statistics.
+        - Optionally displays a plot of the regression.
+        """
+        if indicator_x not in country.data.index or indicator_y not in country.data.index:
+            print(f"One or both indicators not found for {country.name}.")
+            return None
+        
+        # Extract the values for both indicators
+        x_values = country.data.loc[indicator_x].dropna()
+        y_values = country.data.loc[indicator_y].dropna()
+
+        # Only keep years that are available in both indicators
+        common_years = x_values.index.intersection(y_values.index)
+        x_values = x_values.loc[common_years]
+        y_values = y_values.loc[common_years]
+        
+        if len(common_years) < 2:
+            print(f"Not enough data points for {country.name}.")
+            return None
+
+        # Calculate linear regression statistics
+        slope, intercept, r_value, p_value, std_err = linregress(x_values, y_values)
+        r_squared = r_value ** 2
+        
+        # Calculate Pearson correlation
+        corr, _ = pearsonr(x_values, y_values)
+        
+        # Mean and standard deviation of both indicators
+        x_mean = x_values.mean()
+        x_std = x_values.std()
+        y_mean = y_values.mean()
+        y_std = y_values.std()
+        
+        # Create a table of statistics
+        stats = {
+            'Metric': ['Slope', 'Intercept', 'R-squared', 'Correlation (r)', 'P-value', 
+                    f'Mean of {indicator_x}', f'Std Dev of {indicator_x}', 
+                    f'Mean of {indicator_y}', f'Std Dev of {indicator_y}'],
+            'Value': [slope, intercept, r_squared, corr, p_value, x_mean, x_std, y_mean, y_std]
+        }
+        
+        stats_df = pd.DataFrame(stats)
+        
+        # Optionally plot the regression
+        if plot:
+            plt.figure(figsize=(10, 6))
+
+            # Scatter plot of the data points
+            plt.scatter(x_values, y_values, color='blue', label=f'{country.name}', marker='o')
+
+            # Linear regression line
+            X = np.array(x_values).reshape(-1, 1)
+            trend_line = slope * X + intercept
+            plt.plot(x_values, trend_line, color='red', label=f'Trend Line: y = {slope:.2f}x + {intercept:.2f}')
+            
+            # Display regression statistics in the plot
+            plt.text(0.05, 0.95, f'R-squared: {r_squared:.2f}\nCorrelation: {corr:.2f}', 
+                    transform=plt.gca().transAxes, fontsize=10, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
+
+            # Set the title and labels
+            plt.title(f'{indicator_y} vs. {indicator_x} for {country.name}', fontsize=16)
+            plt.xlabel(f'{indicator_x}', fontsize=12)
+            plt.ylabel(f'{indicator_y}', fontsize=12)
+
+            # Create the legend with country name and trend line
+            plt.legend(title=f'{country.name}', fontsize=10)
+
+            # Add grid for readability
+            plt.grid(True, linestyle='--', alpha=0.7)
+
+            # Display the plot
+            plt.tight_layout()
+            plt.show()
+        
+        return stats_df
