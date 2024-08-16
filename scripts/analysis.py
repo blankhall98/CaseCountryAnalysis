@@ -11,20 +11,61 @@ class Analyst:
 
     def __init__(self,routes):
         self.routes = routes
+        self.load_data()
 
     def load_data(self):
+        #read routes
         self.qog_db = pd.read_csv(self.routes['qog_db'])
+        self.inflation = pd.read_csv(self.routes['inflation'])
+        self.debt = pd.read_csv(self.routes['debt'])
+        self.growth = pd.read_csv(self.routes['gdp_growth'])
+        ###
         self.time_period = (1960,2020)
         self.non_year_columns = ['Economy ISO3', 'Economy Name', 'Indicator ID', 'Indicator']
         self.year_columns = [str(year) for year in range(self.time_period[0], self.time_period[1] + 1)]
         self.columns_to_keep = self.non_year_columns + self.year_columns
         self.qog_db = self.qog_db[self.columns_to_keep]
 
+    def extract_gdp_growth_data(self, code):
+        country_data = self.growth[self.growth['Country Code']==code]
+        country_data = country_data[[str(year) for year in range(1960, 2020 + 1)]]
+        new_row = pd.Series(np.nan, index=self.year_columns)
+        new_row.loc['1960':'2020'] = country_data.values[0]
+        return new_row, 'GDP growth (annual %)'
+
+    def extract_inflation_data(self, name):
+        country_data = self.inflation[self.inflation['Inflation rate, average consumer prices (Annual percent change)']==name]
+        country_data = country_data[[str(year) for year in range(1980, 2020 + 1)]]
+        country_data = country_data.map(lambda x: str(x).replace('no data', str(np.nan)) if isinstance(x, str) else x)
+        country_data = country_data.map(lambda x: float(str(x).replace(',', '.')) if isinstance(x, str) else x)
+        new_row = pd.Series(np.nan, index=self.year_columns)
+        new_row.loc['1980':'2020'] = country_data.values[0]
+        return new_row, 'Inflation rate, average consumer prices (Annual percent change)'
+    
+    def extract_debt_data(self, name):
+        country_data = self.debt[self.debt['DEBT (% of GDP)']==name]
+        country_data = country_data[[str(year) for year in range(1960, 2015 + 1)]]
+        country_data = country_data.map(lambda x: str(x).replace('no data', str(np.nan)) if isinstance(x, str) else x)
+        country_data = country_data.map(lambda x: float(str(x).replace(',', '.')) if isinstance(x, str) else x)
+        new_row = pd.Series(np.nan, index=self.year_columns)
+        new_row.loc['1960':'2015'] = country_data.values[0]
+        return new_row, 'DEBT (% of GDP)'
+
     def extract_country_data(self, iso_code, name):
-    # Filter the DataFrame based on the 'Economy ISO3' column
+        # Filter the DataFrame based on the 'Economy ISO3' column
         country_data = self.qog_db[self.qog_db['Economy ISO3'] == iso_code].set_index('Indicator')
         country_data = country_data.drop(self.columns_to_keep[:3], axis=1)
         country_data = country_data.map(lambda x: float(str(x).replace(',', '.')) if isinstance(x, str) else x)
+        #calculate country inflation
+        inflation_data, inflation_name = self.extract_inflation_data(name)
+        country_data.loc[inflation_name] = inflation_data
+        #calculate country debt
+        debt_data, debt_name = self.extract_debt_data(name)
+        country_data.loc[debt_name] = debt_data
+        #calculate country gdp growth
+        growth_data, growth_name = self.extract_gdp_growth_data(iso_code)
+        country_data.loc[growth_name] = growth_data
+        #prepare the country data
         token = Country({'ISO': iso_code, 'data': country_data, 'name': name})
         return token
     

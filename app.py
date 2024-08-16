@@ -4,12 +4,9 @@ from scripts.country import Country, Region
 from case import Case
 from scripts.analysis import Analyst
 
-routes = {
-    'qog_db': './data/QOG-BD.csv'
-}
-
+# Initialize analyst instance
+routes = Case['routes']
 analyst = Analyst(routes)
-analyst.load_data()
 
 # Countries
 chl = analyst.extract_country_data('CHL','Chile')
@@ -25,7 +22,7 @@ per = analyst.extract_country_data('PER','Peru')
 LA = Region([chl, arg, mex, bra, col, bol, per],'Latin America', weight='Real GDP (2005)')
 
 ##### CASE #####
-indicator = "Foreign direct investment, net inflows (% of GDP)"
+indicator = "GDP growth (annual %)"
 countries = [chl, arg, LA]
 period = (1960,2020)
 periods = [(1970,1973),(1973, 1990), (1990, 2010)]
@@ -33,26 +30,26 @@ periods_titles = ['Allende Nationalization','Pinochet Dictatorship', 'Democracy'
 ###########
 
 ##### ACTIONS #####
+if __name__ == "__main__":
+    #analyst.plot_time_series(countries, 'Oil production value in 2014 dollars')
+    analyst.plot_time_series(countries, indicator, 
+                            period=period, periods=periods,
+                            periods_titles=periods_titles
+                            )
 
-#analyst.plot_time_series(countries, 'Oil production value in 2014 dollars')
-analyst.plot_time_series(countries, indicator, 
-                        period=period, periods=periods,
-                        periods_titles=periods_titles
-                        )
+    # table statistics
+    table , table_data = analyst.calculate_period_stats(countries,
+                                                        indicator,
+                                                        periods=periods,
+                                                        periods_titles=periods_titles
+                                                        )
 
-# table statistics
-table , table_data = analyst.calculate_period_stats(countries,
-                                                     indicator,
-                                                     periods=periods,
-                                                     periods_titles=periods_titles
-                                                     )
+    print(table)
+    analyst.plot_trend_comparison(table, table_data)
 
-print(table)
-analyst.plot_trend_comparison(table, table_data)
+    # Indicator vs Indicator
+    indicators = ['Trade (% of GDP)', 'Foreign direct investment, net inflows (% of GDP)']
+    table = analyst.indicator_relationship_stats(chl, indicators[0], indicators[1])
+    print(table)
 
-# Indicator vs Indicator
-indicators = ['Trade (% of GDP)', 'Foreign direct investment, net inflows (% of GDP)']
-table = analyst.indicator_relationship_stats(chl, indicators[0], indicators[1])
-print(table)
-
-##########
+    ##########

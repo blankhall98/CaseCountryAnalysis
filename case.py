@@ -1,4 +1,11 @@
-Case = {}
+Case = {
+    'routes': {
+        'qog_db': './data/QOG-BD.csv',
+        'inflation': './data/inflation.csv',
+        'debt': './data/debt.csv',
+        'gdp_growth': './data/gdp_growth.csv'
+    }
+}
 
 ##### INDICATORS #####
 ### Institutional Indicators
