@@ -25,6 +25,7 @@ Case = {
 
 ### Economic Indicators
 # GDP per Capita (Current Prices)
+# GDP growth (annual %)
 # Real GDP per Capita
 # Total Export
 # Real GDP (2005)
@@ -34,8 +35,8 @@ Case = {
 # Total Ecological Footprint of Consumption (GHA per person)
 # Foreign direct investment, net inflows (% of GDP)
 # Trade (% of GDP)
-# Inflation
-# External Debt (% of GDP)
+# Inflation rate, average consumer prices (Annual percent change)
+# DEBT (% of GDP)
 
 ## Sectoral Indicators
 # Gas production value in 2014 dollars

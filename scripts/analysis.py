@@ -419,7 +419,7 @@ class Analyst:
             plt.plot(x_values, trend_line, color='red', label=f'Trend Line: y = {slope:.2f}x + {intercept:.2f}')
             
             # Display regression statistics in the plot
-            plt.text(0.05, 0.95, f'R-squared: {r_squared:.2f}\nCorrelation: {corr:.2f}', 
+            plt.text(0.05, 0.95, '\n'+'\n'+'\n'+'\n'+'\n'+f'R-squared: {r_squared:.2f}\nCorrelation: {corr:.2f}', 
                     transform=plt.gca().transAxes, fontsize=10, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
 
             # Set the title and labels
